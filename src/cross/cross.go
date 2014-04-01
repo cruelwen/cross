@@ -3,8 +3,10 @@ package main
 import (
   "github.com/nsf/termbox-go"
   "math/rand"
+  "flag"
   "time"
   "fmt"
+  "strconv"
   "os"
 )
 
@@ -14,6 +16,8 @@ type typeMe struct {
 }
 
 func main() {
+  var startupNum = flag.Int("n", 0, "startup enemies num")
+  flag.Parse()
   err := termbox.Init()
   if err != nil {
     panic(err)
@@ -24,28 +28,52 @@ func main() {
 
   width, height := termbox.Size()
   me := typeMe {width / 2, height / 2, width, height}
-  enemyList := make([]*typeEnemy,10)
-  for i:=0;i<10;i++ {
-    enemyList[i] = createEnemy(width, height)
-    go enemyList[i].move()
+  enemyList := [1000]*typeEnemy {}
+  enemyNum := 0
+  for ;enemyNum<*startupNum;enemyNum++ {
+    enemyList[enemyNum] = createEnemy(width, height)
+    go enemyList[enemyNum].move()
   }
 
-  go drawAll(&me,enemyList)
+  go drawAll(&me,&enemyList,&enemyNum)
+  go enemyMaster(&enemyList,&enemyNum)
   for {
     me.moveWithKey()
   }
 }
 
-func drawAll(me *typeMe, enemyList []*typeEnemy) {
+func enemyMaster(enemyList *[1000]*typeEnemy,enemyNum *int) {
+  width, height := termbox.Size()
+  for ;*enemyNum < 1000;*enemyNum++ {
+    enemyList[*enemyNum] = createEnemy(width, height)
+    go enemyList[*enemyNum].move()
+    time.Sleep(100 * time.Millisecond)
+  }
+}
+
+func drawAll(me *typeMe, enemyList *[1000]*typeEnemy,enemyNum *int) {
   for {
     const coldef = termbox.ColorDefault
     termbox.Clear(coldef, coldef)
+    // player
     me.print()
-    for _,enemy := range enemyList {
-      enemy.print()
+    // score
+    score := strconv.Itoa(*enemyNum)
+    for p, c := range score {
+      termbox.SetCell(p,0,c,coldef,coldef)
+    }
+
+    // enemy
+    for i:=0;i<*enemyNum;i++ {
+      enemyList[i].print()
+      if me.x == enemyList[i].x && me.y == enemyList[i].y {
+        termbox.Close()
+        fmt.Println("Score:",*enemyNum)
+        os.Exit(0)
+      }
     }
     termbox.Flush()
-    time.Sleep(100 * time.Millisecond)
+    time.Sleep(30 * time.Millisecond)
   }
 }
 

@@ -11,14 +11,12 @@ type typeEnemy struct {
   dx,dy int
   width,height int
   sleepTime time.Duration
-  isEnd bool
 }
 
 func createEnemy(width,height int) (enemy *typeEnemy) {
   enemy = new(typeEnemy)
   enemy.width = width
   enemy.height = height
-  enemy.isEnd = false
   xOrY := rand.Intn(2)
   if xOrY == 0 {
     enemy.dx = 0
@@ -43,14 +41,13 @@ func createEnemy(width,height int) (enemy *typeEnemy) {
   return
 }
 
-func (enemy *typeEnemy) next() (isEnd bool) {
+func (enemy *typeEnemy) next()  {
   enemy.x += enemy.dx
   enemy.y += enemy.dy
   if enemy.x > enemy.width || enemy.x < 0 || enemy.y > enemy.height || enemy.y < 0 {
-    isEnd = true
-    enemy.isEnd = true
+    enemy.dx = -enemy.dx
+    enemy.dy = -enemy.dy
   }
-  return
 }
 
 func (enemy typeEnemy) sleep() {
